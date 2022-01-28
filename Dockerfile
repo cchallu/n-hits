@@ -30,7 +30,3 @@ RUN conda install -n base -c conda-forge mamba
 ADD ./environment.yml ./environment.yml
 RUN mamba env update -n base -f ./environment.yml && \
     conda clean -afy
-
-RUN conda install -c anaconda git && \
-    git clone https://github.com/Nixtla/nixtlats.git -b experiment_utils && \
-    cd nixtlats && pip install -e .
