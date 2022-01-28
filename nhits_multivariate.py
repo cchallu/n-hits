@@ -63,7 +63,7 @@ def get_experiment_space(args):
 def main(args):
 
     #----------------------------------------------- Load Data -----------------------------------------------#
-    Y_df = pd.read_csv(f'./data/{args.dataset}_multivariate.csv')
+    Y_df = pd.read_csv(f'./data/{args.dataset}/M/df_y.csv')
 
     X_df = None
     S_df = None
@@ -75,16 +75,16 @@ def main(args):
     if args.dataset == 'Exchange':
         len_val = 760
         len_test = 1517
-    if args.dataset == 'Electricity':
+    if args.dataset == 'ECL':
         len_val = 2632
         len_test = 5260
-    if args.dataset == 'Traffic':
+    if args.dataset == 'traffic':
         len_val = 1756
         len_test = 3508
-    if args.dataset == 'Weather':
+    if args.dataset == 'weather':
         len_val = 5270
         len_test = 10539
-    if args.dataset == 'ILI':
+    if args.dataset == 'ili':
         len_val = 97
         len_test = 193
 
@@ -131,7 +131,7 @@ if __name__ == '__main__':
 
     horizons = [96, 192, 336, 720]
     ILI_horizons = [24, 36, 48, 60]
-    datasets = ['ETTm2', 'Electricity', 'Exchange', 'Traffic', 'Weather', 'ILI']
+    datasets = ['ETTm2', 'ECL', 'Exchange', 'traffic', 'weather', 'ili']
 
     for dataset in datasets:
         # Horizon
