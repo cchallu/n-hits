@@ -1,16 +1,13 @@
 import os
 import pickle
-import glob
 import time
-import numpy as np
-import pandas as pd
 import argparse
-import platform
+import pandas as pd
 
 from hyperopt import fmin, tpe, hp, Trials, STATUS_OK
 
-from nixtlats.losses.numpy import mae, mse
-from nixtlats.experiments.utils import hyperopt_tunning
+from src.losses.numpy import mae, mse
+from src.experiments.utils import hyperopt_tunning
 
 def get_experiment_space(args):
     space= {# Architecture parameters
@@ -27,12 +24,13 @@ def get_experiment_space(args):
             'n_blocks': hp.choice('n_blocks', [ 3*[1]]),
             'n_layers': hp.choice('n_layers', [ 9*[2] ]),
             'n_hidden': hp.choice('n_hidden', [ 512 ]),
-            'n_pool_kernel_size': hp.choice('n_pool_kernel_size', [ 3*[1], 3*[2], 3*[4], 3*[8] ]),
+            'n_pool_kernel_size': hp.choice('n_pool_kernel_size', [ 3*[1], 3*[2], 3*[4], 3*[8], [8, 4, 1], [16, 8, 1] ]),
             'n_freq_downsample': hp.choice('n_freq_downsample', [ [168, 24, 1], [24, 12, 1],
-                                                                    [180, 60, 1], [60, 8, 1],
-                                                                    [40, 20, 1]
+                                                                  [180, 60, 1], [60, 8, 1],
+                                                                  [40, 20, 1]
                                                                 ]),
-            'interpolation_mode': hp.choice('interpolation_mode', [ args.interpolation_mode ]),
+            'pooling_mode': hp.choice('pooling_mode', [ 'max' ]),
+            'interpolation_mode': hp.choice('interpolation_mode', ['linear']),
             # Regularization and optimization parameters
             'batch_normalization': hp.choice('batch_normalization', [False]),
             'dropout_prob_theta': hp.choice('dropout_prob_theta', [ 0 ]),
@@ -93,7 +91,7 @@ def main(args):
     space = get_experiment_space(args)
 
     #---------------------------------------------- Directories ----------------------------------------------#
-    output_dir = f'./results/multivariate/{args.dataset}_{args.horizon}/NHITS_{args.interpolation_mode}/'
+    output_dir = f'./results/multivariate/{args.dataset}_{args.horizon}/NHITS/'
 
     os.makedirs(output_dir, exist_ok = True)
     assert os.path.exists(output_dir), f'Output dir {output_dir} does not exist'
@@ -120,7 +118,6 @@ def main(args):
 def parse_args():
     desc = "Example of hyperparameter tuning"
     parser = argparse.ArgumentParser(description=desc)
-    parser.add_argument('--interpolation_mode', type=str, help='Interpolation mode')
     parser.add_argument('--hyperopt_max_evals', type=int, help='hyperopt_max_evals')
     parser.add_argument('--experiment_id', default=None, required=False, type=str, help='string to identify experiment')
     return parser.parse_args()
@@ -152,3 +149,7 @@ if __name__ == '__main__':
             print('Time: ', time.time() - start)
 
     main(args)
+
+# source ~/anaconda3/etc/profile.d/conda.sh
+# conda activate nixtla
+# CUDA_VISIBLE_DEVICES=0 python nhits_multivariate.py --hyperopt_max_evals 10 --experiment_id "test"

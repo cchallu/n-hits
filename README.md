@@ -19,5 +19,5 @@ Multi-rate input pooling, hierarchical interpolation and backcast residual conne
 
 To replicate the results of the paper, in particular to produce the forecasts for N-HiTS, run the following line:
 ```console
-python deepmidas_multivariate.py --hyperopt_max_evals 10 --pooling_mode 'max' --interpolation_mode 'linear' --pooling 1 --hi 1 --experiment_id "nhits_0_0"
+python nhits_multivariate.py --hyperopt_max_evals 10 --experiment_id "run_1"
 ```
