@@ -1,3 +1,6 @@
-# N-HiTS
+# deep_midas
 
-Repository with code for replicating main results of the paper "N-HiTS: Neural Hierarchical Interpolation for Time Series Forecasting", submitted to ICML 2022.
+## Download data
+
+1. `mkdir results`
+2. `aws s3 sync s3://deepmidas/autoformer/ results/`
