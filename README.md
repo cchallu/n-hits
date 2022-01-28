@@ -31,5 +31,16 @@ If you want to use `GPU` simply add `gpu=0` to the last line.
 ```console
 make run_module module="python -m nhits_multivariate --hyperopt_max_evals 10 --experiment_id run_1" gpu=0
 ```
+4. Evaluate results for a dataset using:
 
+```console
+make run_module module="python -m evaluation --dataset ETTm2 --horizon -1 --model NHITS --experiment run_1"
+```
 
+Alternatively, run all evaluations at once:
+
+```console
+for dataset in ETTm2 ECL Exchange traffic weather ili;
+ do make run_module module="python -m evaluation --dataset $dataset --horizon -1 --model NHITS --experiment run_1";
+done
+```
