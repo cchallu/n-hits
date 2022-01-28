@@ -17,7 +17,12 @@ Multi-rate input pooling, hierarchical interpolation and backcast residual conne
 
 ### Run N-HiTS experiment from console
 
-To replicate the results of the paper, in particular to produce the forecasts for N-HiTS, run the following line:
+To replicate the results of the paper, in particular to produce the forecasts for N-HiTS, run the following:
+
+
+1. `make init`
+2. `make get_dataset` to download data.
+3. 
 ```console
-python nhits_multivariate.py --hyperopt_max_evals 10 --experiment_id "run_1"
+make run_module module="python -m nhits_multivariate --hyperopt_max_evals 10 --experiment_id run_1"
 ```
