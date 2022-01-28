@@ -26,3 +26,10 @@ To replicate the results of the paper, in particular to produce the forecasts fo
 ```console
 make run_module module="python -m nhits_multivariate --hyperopt_max_evals 10 --experiment_id run_1"
 ```
+
+If you want to use `GPU` simply add `gpu=0` to the last line.
+```console
+make run_module module="python -m nhits_multivariate --hyperopt_max_evals 10 --experiment_id run_1" gpu=0
+```
+
+
