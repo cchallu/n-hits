@@ -1,13 +1,9 @@
 channels:
   - conda-forge
   - defaults
-  - rapidsai
-  - nvidia
 dependencies:
   - python=3.7
   - pip
-  - cuml
-  - cudatoolkit=11.2
   - matplotlib
   - numpy
   - pandas
@@ -19,7 +15,6 @@ dependencies:
   - scikit-learn
   - setuptools=58.2.0
   - pip:
-    - cupy-cuda112
     - torch==1.9.0
     - jupyterlab
     - parse
