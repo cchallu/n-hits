@@ -135,7 +135,7 @@ if __name__ == '__main__':
 
     for dataset in datasets:
         # Horizon
-        if dataset == 'ILI':
+        if dataset == 'ili':
             horizons_dataset = ILI_horizons
         else:
             horizons_dataset = horizons
