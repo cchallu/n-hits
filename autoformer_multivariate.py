@@ -1,3 +1,4 @@
+from math import ceil
 import os
 import pickle
 import glob
@@ -36,9 +37,9 @@ def get_experiment_space(args):
             'moving_avg': hp.choice('moving_avg', [25]),
             'activation': hp.choice('activation', ['gelu']),
             # Regularization and optimization parameters
-            'learning_rate': hp.choice('learning_rate', [0.0001]),
+            'learning_rate': hp.choice('learning_rate', [1e-4]),
             'lr_decay': hp.choice('lr_decay', [0.5]),
-            'n_lr_decays': hp.choice('n_lr_decays', [5]),
+            'n_lr_decays': hp.choice('n_lr_decays', [ceil(args.max_epochs / 2)]),
             'weight_decay': hp.choice('weight_decay', [0]), 
             'max_epochs': hp.choice('max_epochs', [args.max_epochs]),
             'max_steps': hp.choice('max_steps', [None]),
