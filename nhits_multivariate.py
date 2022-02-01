@@ -65,6 +65,12 @@ def main(args):
     #----------------------------------------------- Load Data -----------------------------------------------#
     Y_df = pd.read_csv(f'./data/{args.dataset}/M/df_y.csv')
 
+    Y_df = Y_df.pivot(index='ds', columns='unique_id', values='y').reset_index()
+    columns = list(Y_df.columns)
+    columns = ['unique_id'] + columns
+    Y_df['unique_id'] = 'data'
+    Y_df = Y_df[columns]
+
     X_df = None
     S_df = None
 
@@ -131,7 +137,7 @@ if __name__ == '__main__':
 
     horizons = [96, 192, 336, 720]
     ILI_horizons = [24, 36, 48, 60]
-    datasets = ['ETTm2', 'ECL', 'Exchange', 'traffic', 'weather', 'ili']
+    datasets = ['ETTm2'] #, 'ECL', 'Exchange', 'traffic', 'weather', 'ili']
 
     for dataset in datasets:
         # Horizon

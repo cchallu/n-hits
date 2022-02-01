@@ -45,29 +45,33 @@ class _sEncoder(nn.Module):
 
 # Cell
 class IdentityBasis(nn.Module):
-    def __init__(self, backcast_size: int, forecast_size: int, interpolation_mode: str):
+    def __init__(self, backcast_size: int, forecast_size: int, interpolation_mode: str, n_freq_downsample: int):
         super().__init__()
         assert (interpolation_mode in ['linear','nearest']) or ('cubic' in interpolation_mode)
         self.forecast_size = forecast_size
         self.backcast_size = backcast_size
         self.interpolation_mode = interpolation_mode
+        self.n_freq_downsample = n_freq_downsample
 
     def forward(self, theta: t.Tensor, insample_x_t: t.Tensor, outsample_x_t: t.Tensor) -> Tuple[t.Tensor, t.Tensor]:
 
-        backcast = theta[:, :self.backcast_size]
-        knots = theta[:, self.backcast_size:]
+        downsampled_forecast_size = max(self.forecast_size//self.n_freq_downsample, 1)
+        theta = theta.view(len(theta), -1, (downsampled_forecast_size + self.backcast_size))
+
+        backcast = theta[:, :, :self.backcast_size]
+        knots = theta[:, :, self.backcast_size:]
 
         if self.interpolation_mode=='nearest':
-            knots = knots[:,None,:]
+            #knots = knots[:,None,:]
             forecast = F.interpolate(knots, size=self.forecast_size, mode=self.interpolation_mode)
-            forecast = forecast[:,0,:]
+            #forecast = forecast[:,0,:]
         elif self.interpolation_mode=='linear':
-            knots = knots[:,None,:]
+            #knots = knots[:,None,:]
             forecast = F.interpolate(knots, size=self.forecast_size, mode=self.interpolation_mode) #, align_corners=True)
-            forecast = forecast[:,0,:]
+            #forecast = forecast[:,0,:]
         elif 'cubic' in self.interpolation_mode:
             batch_size = int(self.interpolation_mode.split('-')[-1])
-            knots = knots[:,None,None,:]
+            knots = knots[:,None,:,:]
             forecast = t.zeros((len(knots), self.forecast_size)).to(knots.device)
             n_batches = int(np.ceil(len(knots)/batch_size))
             for i in range(n_batches):
@@ -107,7 +111,7 @@ class _NHITSBlock(nn.Module):
     """
     N-HiTS block which takes a basis function as an argument.
     """
-    def __init__(self, n_time_in: int, n_time_out: int, n_x: int,
+    def __init__(self, n_time_in: int, n_time_out: int, n_y: int, n_x: int,
                  n_s: int, n_s_hidden: int, n_theta: int, n_theta_hidden: list,
                  n_pool_kernel_size: int, pooling_mode: str, basis: nn.Module,
                  n_layers: int,  batch_normalization: bool, dropout_prob: float, activation: str):
@@ -121,12 +125,13 @@ class _NHITSBlock(nn.Module):
 
         if n_s == 0:
             n_s_hidden = 0
-        n_theta_hidden = [n_time_in_pooled + (n_time_in+n_time_out)*n_x + n_s_hidden] + n_theta_hidden
+        n_theta_hidden = [n_y*n_time_in_pooled + (n_time_in+n_time_out)*n_x + n_s_hidden] + n_theta_hidden
 
         self.n_time_in = n_time_in
         self.n_time_out = n_time_out
         self.n_s = n_s
         self.n_s_hidden = n_s_hidden
+        self.n_y = n_y
         self.n_x = n_x
         self.n_pool_kernel_size = n_pool_kernel_size
         self.batch_normalization = batch_normalization
@@ -165,10 +170,13 @@ class _NHITSBlock(nn.Module):
     def forward(self, insample_y: t.Tensor, insample_x_t: t.Tensor,
                 outsample_x_t: t.Tensor, x_s: t.Tensor) -> Tuple[t.Tensor, t.Tensor]:
 
-        insample_y = insample_y.unsqueeze(1)
+        # insample_y = insample_y.unsqueeze(1)
         # Pooling layer to downsample input
+        # insample_y = self.pooling_layer(insample_y)
+        # insample_y = insample_y.squeeze(1)
+
         insample_y = self.pooling_layer(insample_y)
-        insample_y = insample_y.squeeze(1)
+        insample_y = insample_y.view(len(insample_y), -1)
 
         batch_size = len(insample_y)
         if self.n_x > 0:
@@ -194,6 +202,7 @@ class _NHITS(nn.Module):
     def __init__(self,
                  n_time_in,
                  n_time_out,
+                 n_y,
                  n_s,
                  n_x,
                  n_s_hidden,
@@ -219,6 +228,7 @@ class _NHITS(nn.Module):
                                    n_blocks=n_blocks,
                                    n_time_in=n_time_in,
                                    n_time_out=n_time_out,
+                                   n_y=n_y,
                                    n_x=n_x,
                                    n_x_hidden=n_x_hidden,
                                    n_s=n_s,
@@ -238,7 +248,7 @@ class _NHITS(nn.Module):
 
     def create_stack(self, stack_types, n_blocks,
                      n_time_in, n_time_out,
-                     n_x, n_x_hidden, n_s, n_s_hidden,
+                     n_y, n_x, n_x_hidden, n_s, n_s_hidden,
                      n_layers, n_theta_hidden,
                      n_pool_kernel_size, n_freq_downsample, pooling_mode, interpolation_mode,
                      batch_normalization, dropout_prob_theta,
@@ -260,16 +270,18 @@ class _NHITS(nn.Module):
                     nbeats_block = block_list[-1]
                 else:
                     if stack_types[i] == 'identity':
-                        n_theta = (n_time_in + max(n_time_out//n_freq_downsample[i], 1) )
+                        n_theta = n_y * (n_time_in + max(n_time_out//n_freq_downsample[i], 1) )
                         basis = IdentityBasis(backcast_size=n_time_in,
                                               forecast_size=n_time_out,
-                                              interpolation_mode=interpolation_mode)
+                                              interpolation_mode=interpolation_mode,
+                                              n_freq_downsample=n_freq_downsample[i])
 
                     else:
                         assert 1<0, f'Block type not found!'
 
                     nbeats_block = _NHITSBlock(n_time_in=n_time_in,
                                                    n_time_out=n_time_out,
+                                                   n_y=n_y,
                                                    n_x=n_x,
                                                    n_s=n_s,
                                                    n_s_hidden=n_s_hidden,
@@ -295,12 +307,12 @@ class _NHITS(nn.Module):
                 return_decomposition: bool=False):
 
         # insample
-        insample_y    = Y[:, :-self.n_time_out]
+        insample_y    = Y[:, :, :-self.n_time_out]
         insample_x_t  = X[:, :, :-self.n_time_out]
         insample_mask = insample_mask[:, :-self.n_time_out]
 
         # outsample
-        outsample_y   = Y[:, -self.n_time_out:]
+        outsample_y   = Y[:, :, -self.n_time_out:]
         outsample_x_t = X[:, :, -self.n_time_out:]
         outsample_mask = outsample_mask[:, -self.n_time_out:]
 
@@ -326,8 +338,10 @@ class _NHITS(nn.Module):
         residuals = insample_y.flip(dims=(-1,))
         insample_x_t = insample_x_t.flip(dims=(-1,))
         insample_mask = insample_mask.flip(dims=(-1,))
+        insample_mask = insample_mask[:,None,:]
 
-        forecast = insample_y[:, -1:] # Level with Naive1
+        # forecast = insample_y[:, -1:] # Level with Naive1
+        forecast = insample_y[:, :, -1:] # Level with Naive1
         for i, block in enumerate(self.blocks):
             backcast, block_forecast = block(insample_y=residuals, insample_x_t=insample_x_t,
                                              outsample_x_t=outsample_x_t, x_s=x_s)
@@ -367,6 +381,7 @@ class NHITS(pl.LightningModule):
     def __init__(self,
                  n_time_in,
                  n_time_out,
+                 n_y,
                  n_x,
                  n_x_hidden,
                  n_s,
@@ -469,6 +484,7 @@ class NHITS(pl.LightningModule):
         # Architecture parameters
         self.n_time_in = n_time_in
         self.n_time_out = n_time_out
+        self.n_y = n_y
         self.n_x = n_x
         self.n_x_hidden = n_x_hidden
         self.n_s = n_s
@@ -512,6 +528,7 @@ class NHITS(pl.LightningModule):
                              n_time_out=self.n_time_out,
                              n_s=self.n_s,
                              n_x=self.n_x,
+                             n_y=self.n_y,
                              n_s_hidden=self.n_s_hidden,
                              n_x_hidden=self.n_x_hidden,
                              stack_types=self.stack_types,
@@ -532,6 +549,7 @@ class NHITS(pl.LightningModule):
         S = batch['S']
         Y = batch['Y']
         X = batch['X']
+
         sample_mask = batch['sample_mask']
         available_mask = batch['available_mask']
 
@@ -539,6 +557,10 @@ class NHITS(pl.LightningModule):
                                                            insample_mask=available_mask,
                                                            outsample_mask=sample_mask,
                                                            return_decomposition=False)
+        
+        outsample_mask = outsample_mask[:,None,:]
+        aux = t.ones(forecast.shape).to(outsample_mask.device)
+        outsample_mask = outsample_mask * aux
 
         loss = self.loss_fn_train(y=outsample_y,
                                   y_hat=forecast,
@@ -553,6 +575,7 @@ class NHITS(pl.LightningModule):
         S = batch['S']
         Y = batch['Y']
         X = batch['X']
+
         sample_mask = batch['sample_mask']
         available_mask = batch['available_mask']
 
@@ -560,6 +583,10 @@ class NHITS(pl.LightningModule):
                                                            insample_mask=available_mask,
                                                            outsample_mask=sample_mask,
                                                            return_decomposition=False)
+
+        outsample_mask = outsample_mask[:,None,:]
+        aux = t.ones(forecast.shape).to(outsample_mask.device)
+        outsample_mask = outsample_mask * aux
 
         loss = self.loss_fn_valid(y=outsample_y,
                                   y_hat=forecast,
@@ -593,6 +620,11 @@ class NHITS(pl.LightningModule):
                                                            insample_mask=available_mask,
                                                            outsample_mask=sample_mask,
                                                            return_decomposition=False)
+        
+        outsample_mask = outsample_mask[:,None,:]
+        aux = t.ones(forecast.shape).to(outsample_mask.device)
+        outsample_mask = outsample_mask * aux
+
         return outsample_y, forecast, outsample_mask
 
     def configure_optimizers(self):

@@ -342,6 +342,7 @@ def instantiate_nhits(mc):
 
     model = NHITS(n_time_in=int(mc['n_time_in']),
                       n_time_out=int(mc['n_time_out']),
+                      n_y=mc['n_y'],
                       n_x=mc['n_x'],
                       n_s=mc['n_s'],
                       n_s_hidden=int(mc['n_s_hidden']),
@@ -449,7 +450,7 @@ def model_fit_predict(mc, S_df, Y_df, X_df, f_cols, ds_in_val, ds_in_test):
                                                                          f_cols=f_cols,
                                                                          ds_in_val=ds_in_val,
                                                                          ds_in_test=ds_in_test)
-    mc['n_x'], mc['n_s'] = train_dataset.get_n_variables()
+    mc['n_y'], mc['n_x'], mc['n_s'] = train_dataset.get_n_variables()
 
     #------------------------------------------- Instantiate & fit -------------------------------------------#
     train_loader, val_loader, test_loader = instantiate_loaders(mc=mc,

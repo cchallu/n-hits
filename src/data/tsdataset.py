@@ -65,7 +65,7 @@ class BaseDataset(Dataset):
             Wheter or not log outputs.
         """
         assert type(Y_df) == pd.core.frame.DataFrame
-        assert all([(col in Y_df) for col in ['unique_id', 'ds', 'y']])
+        #assert all([(col in Y_df) for col in ['unique_id', 'ds', 'y']])
         self.verbose = verbose
 
         if X_df is not None:
@@ -107,7 +107,7 @@ class BaseDataset(Dataset):
             dataset_info += f'Outsample percentage={out_prc}, \t{n_out} time stamps \n'
             logging.info(dataset_info)
 
-        self.ts_data, self.s_matrix, self.meta_data, self.t_cols, self.s_cols \
+        self.ts_data, self.s_matrix, self.meta_data, self.y_cols, self.t_cols, self.s_cols \
                          = self._df_to_lists(Y_df=Y_df, S_df=S_df, X_df=X_df, mask_df=mask_df)
 
         # Dataset attributes
@@ -123,6 +123,7 @@ class BaseDataset(Dataset):
         self.first_ds = 0
 
         # Number of X and S features
+        self.n_y = len(self.y_cols)
         self.n_x = 0 if X_df is None else X_df.shape[1] - 2 # -2 for unique_id and ds
         self.n_s = 0 if S_df is None else S_df.shape[1] - 1 # -1 for unique_id
 
@@ -211,6 +212,7 @@ def _df_to_lists(self: BaseDataset,
     S = S_df.sort_values('unique_id')
 
     # time columns and static columns for future indexing
+    y_cols = [col for col in Y_df.columns if col not in ['unique_id', 'ds']]
     t_cols = list(G.columns[2:]) # avoid unique_id and ds
     s_cols = list(S.columns[1:]) # avoid unique_id
 
@@ -232,7 +234,7 @@ def _df_to_lists(self: BaseDataset,
     del S, Y, X, M, G
     gc.collect()
 
-    return ts_data, s_data, meta_data, t_cols, s_cols
+    return ts_data, s_data, meta_data, y_cols, t_cols, s_cols
 
 # Cell
 @patch
@@ -305,9 +307,9 @@ def __len__(self: BaseDataset):
 
 # Cell
 @patch
-def get_n_variables(self: BaseDataset) -> Tuple[int, int]:
+def get_n_variables(self: BaseDataset) -> Tuple[int, int, int]:
     """Gets number of exogenous and static variables."""
-    return self.n_x, self.n_s
+    return self.n_y, self.n_x, self.n_s
 
 @patch
 def get_n_series(self: BaseDataset) -> int:
@@ -794,8 +796,8 @@ def __getitem__(self: WindowsDataset,
     windows, S, ts_idxs = self._create_windows_tensor(idx=idx)
 
     # Parse windows to elements of batch
-    Y = windows[:, self.t_cols.index('y'), :]
-    X = windows[:, (self.t_cols.index('y') + 1):self.t_cols.index('available_mask'), :]
+    Y = windows[:, :self.n_y, :]
+    X = windows[:, self.n_y::self.t_cols.index('available_mask'), :]
     available_mask = windows[:, self.t_cols.index('available_mask'), :]
     sample_mask = windows[:, self.t_cols.index('sample_mask'), :]
 
