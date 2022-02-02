@@ -13,7 +13,7 @@ def get_experiment_space(args):
     space= {# Architecture parameters
             'model':'nhits',
             'mode': 'simple',
-            'n_time_in': hp.choice('n_time_in', [1*args.horizon]),
+            'n_time_in': hp.choice('n_time_in', [2*args.horizon]),
             'n_time_out': hp.choice('n_time_out', [args.horizon]),
             'n_x_hidden': hp.choice('n_x_hidden', [0]),
             'n_s_hidden': hp.choice('n_s_hidden', [0]),
@@ -24,7 +24,7 @@ def get_experiment_space(args):
             'n_blocks': hp.choice('n_blocks', [ 3*[1]]),
             'n_layers': hp.choice('n_layers', [ 9*[2] ]),
             'n_hidden': hp.choice('n_hidden', [ 512 ]),
-            'n_pool_kernel_size': hp.choice('n_pool_kernel_size', [ 3*[1], 3*[2], 3*[4], 3*[8], [8, 4, 1], [16, 8, 1] ]),
+            'n_pool_kernel_size': hp.choice('n_pool_kernel_size', [ 3*[2], 3*[4], 3*[8], [8, 4, 1], [16, 8, 1] ]),
             'n_freq_downsample': hp.choice('n_freq_downsample', [ [168, 24, 1], [24, 12, 1],
                                                                   [180, 60, 1], [60, 8, 1],
                                                                   [40, 20, 1]
@@ -40,7 +40,7 @@ def get_experiment_space(args):
             'n_lr_decays': hp.choice('n_lr_decays', [3]), 
             'weight_decay': hp.choice('weight_decay', [0] ),
             'max_epochs': hp.choice('max_epochs', [None]),
-            'max_steps': hp.choice('max_steps', [1_000]),
+            'max_steps': hp.choice('max_steps', [10_000]),
             'early_stop_patience': hp.choice('early_stop_patience', [10]),
             'eval_freq': hp.choice('eval_freq', [50]),
             'loss_train': hp.choice('loss', ['MAE']),
