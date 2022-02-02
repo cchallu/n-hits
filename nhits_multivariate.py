@@ -13,7 +13,7 @@ def get_experiment_space(args):
     space= {# Architecture parameters
             'model':'nhits',
             'mode': 'simple',
-            'n_time_in': hp.choice('n_time_in', [2*args.horizon]),
+            'n_time_in': hp.choice('n_time_in', [ 1024 ]),
             'n_time_out': hp.choice('n_time_out', [args.horizon]),
             'n_x_hidden': hp.choice('n_x_hidden', [0]),
             'n_s_hidden': hp.choice('n_s_hidden', [0]),
@@ -21,9 +21,9 @@ def get_experiment_space(args):
             'activation': hp.choice('activation', ['ReLU']),
             'initialization':  hp.choice('initialization', ['lecun_normal']),
             'stack_types': hp.choice('stack_types', [ 3*['identity'] ]),
-            'n_blocks': hp.choice('n_blocks', [ 3*[1]]),
-            'n_layers': hp.choice('n_layers', [ 9*[2] ]),
-            'n_hidden': hp.choice('n_hidden', [ 512 ]),
+            'n_blocks': hp.choice('n_blocks', [ 3*[1], 3*[3] ]),
+            'n_layers': hp.choice('n_layers', [ 9*[2], 9*[3]  ]),
+            'n_hidden': hp.choice('n_hidden', [ 512, 1024 ]),
             'n_pool_kernel_size': hp.choice('n_pool_kernel_size', [ 3*[2], 3*[4], 3*[8], [8, 4, 1], [16, 8, 1] ]),
             'n_freq_downsample': hp.choice('n_freq_downsample', [ [168, 24, 1], [24, 12, 1],
                                                                   [180, 60, 1], [60, 8, 1],
@@ -35,7 +35,7 @@ def get_experiment_space(args):
             'batch_normalization': hp.choice('batch_normalization', [False]),
             'dropout_prob_theta': hp.choice('dropout_prob_theta', [ 0 ]),
             'dropout_prob_exogenous': hp.choice('dropout_prob_exogenous', [0]),
-            'learning_rate': hp.choice('learning_rate', [0.001]),
+            'learning_rate': hp.choice('learning_rate', [0.0001, 0.001, 0.005]),
             'lr_decay': hp.choice('lr_decay', [0.5] ),
             'n_lr_decays': hp.choice('n_lr_decays', [3]), 
             'weight_decay': hp.choice('weight_decay', [0] ),
@@ -56,7 +56,7 @@ def get_experiment_space(args):
             'idx_to_sample_freq': hp.choice('idx_to_sample_freq', [1]),
             'val_idx_to_sample_freq': hp.choice('val_idx_to_sample_freq', [1]),
             'batch_size': hp.choice('batch_size', [1]),
-            'n_windows': hp.choice('n_windows', [256]),
+            'n_windows': hp.choice('n_windows', [256, 512]),
             'random_seed': hp.quniform('random_seed', 1, 10, 1)}
     return space
 
