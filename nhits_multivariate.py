@@ -13,7 +13,7 @@ def get_experiment_space(args):
     space= {# Architecture parameters
             'model':'nhits',
             'mode': 'simple',
-            'n_time_in': hp.choice('n_time_in', [5*args.horizon]),
+            'n_time_in': hp.choice('n_time_in', [1*args.horizon]),
             'n_time_out': hp.choice('n_time_out', [args.horizon]),
             'n_x_hidden': hp.choice('n_x_hidden', [0]),
             'n_s_hidden': hp.choice('n_s_hidden', [0]),
