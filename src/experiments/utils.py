@@ -333,7 +333,7 @@ def instantiate_esrnn(mc):
 
 # Cell
 def instantiate_nhits(mc):
-    mc['n_theta_hidden'] = len(mc['stack_types']) * [ [int(mc['n_hidden']), int(mc['n_hidden'])] ]
+    mc['n_theta_hidden'] = len(mc['stack_types']) * [ mc['n_layers'][0] * [int(mc['n_hidden'])] ]
 
     if mc['max_epochs'] is not None:
         lr_decay_step_size = int(mc['max_epochs'] / mc['n_lr_decays'])
