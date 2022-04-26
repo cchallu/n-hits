@@ -222,6 +222,9 @@ def instantiate_loaders(mc, train_dataset, val_dataset, test_dataset):
                                         n_windows=int(mc['n_windows']),
                                         eq_batch_size=False,
                                         shuffle=True)
+        train_loader_insample = TimeSeriesLoader(dataset=train_dataset,
+                                                 batch_size=1,
+                                                 shuffle=False)
         if val_dataset is not None:
             val_loader = TimeSeriesLoader(dataset=val_dataset,
                                         batch_size=1,
@@ -256,7 +259,7 @@ def instantiate_loaders(mc, train_dataset, val_dataset, test_dataset):
         else:
             test_loader = None
 
-    return train_loader, val_loader, test_loader
+    return train_loader, val_loader, test_loader, train_loader_insample
 
 # Cell
 def instantiate_nbeats(mc):
@@ -434,7 +437,7 @@ def predict(mc, model, trainer, loader, scaler_y):
    return y_true, y_hat, mask, meta_data
 
 # Cell
-def model_fit_predict(mc, S_df, Y_df, X_df, f_cols, ds_in_val, ds_in_test):
+def model_fit_predict(mc, S_df, Y_df, X_df, f_cols, ds_in_val, ds_in_test, insample=False):
 
     # Protect inplace modifications
     Y_df = Y_df.copy()
@@ -452,10 +455,10 @@ def model_fit_predict(mc, S_df, Y_df, X_df, f_cols, ds_in_val, ds_in_test):
     mc['n_x'], mc['n_s'] = train_dataset.get_n_variables()
 
     #------------------------------------------- Instantiate & fit -------------------------------------------#
-    train_loader, val_loader, test_loader = instantiate_loaders(mc=mc,
-                                                                train_dataset=train_dataset,
-                                                                val_dataset=val_dataset,
-                                                                test_dataset=test_dataset)
+    train_loader, val_loader, test_loader, train_loader_insample = instantiate_loaders(mc=mc,
+                                                                                       train_dataset=train_dataset,
+                                                                                       val_dataset=val_dataset,
+                                                                                       test_dataset=test_dataset)
     model = instantiate_model(mc=mc)
     callbacks = []
     if mc['early_stop_patience']:
@@ -496,6 +499,16 @@ def model_fit_predict(mc, S_df, Y_df, X_df, f_cols, ds_in_val, ds_in_test):
 
         print(f"TEST y_true.shape: {y_true.shape}")
         print(f"TEST y_hat.shape: {y_hat.shape}")
+        print("\n")
+
+    # Predict insample if available
+    if insample:
+        y_true, y_hat, mask, meta_data = predict(mc, model, trainer, train_loader_insample, scaler_y)
+        insample_values = (('insample_y_true', y_true), ('insample_y_hat', y_hat), ('insample_mask', mask), ('insample_meta_data', meta_data))
+        results.update(insample_values)
+
+        print(f"Insample y_true.shape: {y_true.shape}")
+        print(f"Insample y_hat.shape: {y_hat.shape}")
         print("\n")
 
     return results

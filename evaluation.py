@@ -11,13 +11,15 @@ def get_score_min_val(dir):
     print(dir)
     result = pickle.load(open(dir, 'rb'))
     min_mae = 100
+    mc = {}
     for i in range(len(result)):
         val_mae = result.trials[i]['result']['loss']
         if val_mae < min_mae:
             mae_best = result.trials[i]['result']['test_losses']['mae']
             mse_best = result.trials[i]['result']['test_losses']['mse']
             min_mae = val_mae
-    return mae_best, mse_best
+            mc = result.trials[i]['result']['mc']
+    return mae_best, mse_best, mc
 
 def main(args):
 
