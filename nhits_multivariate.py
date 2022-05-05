@@ -22,7 +22,7 @@ def get_experiment_space(args):
             'initialization':  hp.choice('initialization', ['lecun_normal']),
             'stack_types': hp.choice('stack_types', [ 3*['identity'] ]),
             'n_blocks': hp.choice('n_blocks', [ 3*[1], 3*[3] ]),
-            'n_layers': hp.choice('n_layers', [ 9*[2], 9*[3]  ]),
+            'n_layers': hp.choice('n_layers', [ 3*[2], 3*[3] ]),
             'n_hidden': hp.choice('n_hidden', [ 512, 1024 ]),
             'n_pool_kernel_size': hp.choice('n_pool_kernel_size', [ 3*[2], 3*[4], 3*[8], [8, 4, 1], [16, 8, 1] ]),
             'n_freq_downsample': hp.choice('n_freq_downsample', [ [168, 24, 1], [24, 12, 1],
@@ -37,14 +37,14 @@ def get_experiment_space(args):
             'dropout_prob_exogenous': hp.choice('dropout_prob_exogenous', [0]),
             'learning_rate': hp.choice('learning_rate', [0.0001, 0.001, 0.005]),
             'lr_decay': hp.choice('lr_decay', [0.5] ),
-            'n_lr_decays': hp.choice('n_lr_decays', [3]), 
+            'n_lr_decays': hp.choice('n_lr_decays', [3]),
             'weight_decay': hp.choice('weight_decay', [0] ),
             'max_epochs': hp.choice('max_epochs', [None]),
             'max_steps': hp.choice('max_steps', [10_000]),
             'early_stop_patience': hp.choice('early_stop_patience', [10]),
             'eval_freq': hp.choice('eval_freq', [50]),
             'loss_train': hp.choice('loss', ['MAE']),
-            'loss_hypar': hp.choice('loss_hypar', [0.5]),                
+            'loss_hypar': hp.choice('loss_hypar', [0.5]),
             'loss_valid': hp.choice('loss_valid', ['MAE']),
             'l1_theta': hp.choice('l1_theta', [0]),
             # Data parameters
@@ -52,7 +52,7 @@ def get_experiment_space(args):
             'normalizer_x': hp.choice('normalizer_x', [None]),
             'complete_windows':  hp.choice('complete_windows', [True]),
             'frequency': hp.choice('frequency', ['H']),
-            'seasonality': hp.choice('seasonality', [24]),      
+            'seasonality': hp.choice('seasonality', [24]),
             'idx_to_sample_freq': hp.choice('idx_to_sample_freq', [1]),
             'val_idx_to_sample_freq': hp.choice('val_idx_to_sample_freq', [1]),
             'batch_size': hp.choice('batch_size', [1]),
@@ -158,4 +158,4 @@ if __name__ == '__main__':
 
 # source ~/anaconda3/etc/profile.d/conda.sh
 # conda activate nixtla
-# CUDA_VISIBLE_DEVICES=0 python nhits_multivariate.py --hyperopt_max_evals 10 --experiment_id "test"
+# CUDA_VISIBLE_DEVICES=0 python nhits_multivariate.py --hyperopt_max_evals 10 --experiment_id "20220314"
