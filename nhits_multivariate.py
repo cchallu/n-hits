@@ -153,4 +153,4 @@ if __name__ == '__main__':
 
 # source ~/anaconda3/etc/profile.d/conda.sh
 # conda activate nixtla
-# CUDA_VISIBLE_DEVICES=0 python nhits_multivariate.py --hyperopt_max_evals 10 --experiment_id "test"
+# CUDA_VISIBLE_DEVICES=0 python nhits_multivariate.py --hyperopt_max_evals 10 --experiment_id "eval_train"
