@@ -434,7 +434,7 @@ def predict(mc, model, trainer, loader, scaler_y):
    return y_true, y_hat, mask, meta_data
 
 # Cell
-def model_fit_predict(mc, S_df, Y_df, X_df, f_cols, ds_in_val, ds_in_test):
+def model_fit_predict(mc, S_df, Y_df, X_df, f_cols, evaluate_train, ds_in_val, ds_in_test):
 
     # Protect inplace modifications
     Y_df = Y_df.copy()
@@ -479,6 +479,19 @@ def model_fit_predict(mc, S_df, Y_df, X_df, f_cols, ds_in_val, ds_in_test):
     #------------------------------------------------ Predict ------------------------------------------------#
     results = {}
 
+    if evaluate_train:
+        train_loader = TimeSeriesLoader(dataset=train_dataset,
+                                        batch_size=1,
+                                        shuffle=False)
+
+        y_true, y_hat, mask, meta_data = predict(mc, model, trainer, train_loader, scaler_y)
+        train_values = (('train_y_true', y_true), ('train_y_hat', y_hat), ('train_mask', mask), ('train_meta_data', meta_data))
+        results.update(train_values)
+
+        print(f"TRAIN y_true.shape: {y_true.shape}")
+        print(f"TRAIN y_hat.shape: {y_hat.shape}")
+        print("\n")
+        
     if ds_in_val > 0:
         y_true, y_hat, mask, meta_data = predict(mc, model, trainer, val_loader, scaler_y)
         val_values = (('val_y_true', y_true), ('val_y_hat', y_hat), ('val_mask', mask), ('val_meta_data', meta_data))
@@ -503,6 +516,7 @@ def model_fit_predict(mc, S_df, Y_df, X_df, f_cols, ds_in_val, ds_in_test):
 # Cell
 def evaluate_model(mc, loss_function_val, loss_functions_test,
                    S_df, Y_df, X_df, f_cols,
+                   evaluate_train,
                    ds_in_val, ds_in_test,
                    return_forecasts,
                    save_progress,
@@ -533,6 +547,7 @@ def evaluate_model(mc, loss_function_val, loss_functions_test,
                                 Y_df=Y_df,
                                 X_df=X_df,
                                 f_cols=f_cols,
+                                evaluate_train=evaluate_train,
                                 ds_in_val=ds_in_val,
                                 ds_in_test=ds_in_test)
     run_time = time.time() - start
@@ -545,6 +560,13 @@ def evaluate_model(mc, loss_function_val, loss_functions_test,
                       'run_time': run_time,
                       'status': STATUS_OK}
 
+    # Evaluation in train
+    if evaluate_train > 0:
+        train_loss_dict = {}
+        for loss_name, loss_function in loss_functions_test.items():
+            train_loss_dict[loss_name] = loss_function(y=results['train_y_true'], y_hat=results['train_y_hat'], weights=results['train_mask'])
+        results_output['train_losses'] = train_loss_dict
+        
     # Evaluation in test (if provided)
     if ds_in_test > 0:
         test_loss_dict = {}
@@ -564,7 +586,7 @@ def evaluate_model(mc, loss_function_val, loss_functions_test,
 # Cell
 def hyperopt_tunning(space, hyperopt_max_evals, loss_function_val, loss_functions_test,
                      S_df, Y_df, X_df, f_cols,
-                     ds_in_val, ds_in_test,
+                     evaluate_train, ds_in_val, ds_in_test,
                      return_forecasts,
                      save_progress,
                      results_file,
@@ -574,7 +596,7 @@ def hyperopt_tunning(space, hyperopt_max_evals, loss_function_val, loss_function
     trials = Trials()
     fmin_objective = partial(evaluate_model, loss_function_val=loss_function_val, loss_functions_test=loss_functions_test,
                              S_df=S_df, Y_df=Y_df, X_df=X_df, f_cols=f_cols,
-                             ds_in_val=ds_in_val, ds_in_test=ds_in_test,
+                             evaluate_train=evaluate_train, ds_in_val=ds_in_val, ds_in_test=ds_in_test,
                              return_forecasts=return_forecasts, save_progress=save_progress, trials=trials,
                              results_file=results_file,
                              loss_kwargs=loss_kwargs or {})
