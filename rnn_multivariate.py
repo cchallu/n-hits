@@ -29,7 +29,7 @@ def get_experiment_space(args):
             'weight_decay': hp.choice('weight_decay', [0]),
             'noise_std': hp.choice('noise_std', [0.001]),
             'max_epochs': hp.choice('max_epochs', [None]),
-            'max_steps': hp.choice('max_steps', [500, 1000]),
+            'max_steps': hp.choice('max_steps', [500]),
             'early_stop_patience': hp.choice('early_stop_patience', [10]),
             'eval_freq': hp.choice('eval_freq', [50]),
             'loss_train': hp.choice('loss', ['MAE']),
