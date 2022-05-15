@@ -13,13 +13,13 @@ def get_experiment_space(args):
     space= {# Architecture parameters
             'model':'rnn',
             'mode': 'full',
-            'n_time_in': hp.choice('n_time_in', [1*horizon, 2*horizon, 3*horizon]),
+            'n_time_in': hp.choice('n_time_in', [1*horizon]),
             'n_time_out': hp.choice('n_time_out', [horizon]),
             'cell_type': hp.choice('cell_type', ['LSTM']),
-            'state_hsize': hp.choice('state_hsize', [10, 20, 50, 100]),
+            'state_hsize': hp.choice('state_hsize', [10, 20, 50]),
             'dilations': hp.choice('dilations', [ [[1, 2]], [[1, 2, 4, 8]], [[1,2],[4,8]] ]),
             'add_nl_layer': hp.choice('add_nl_layer', [ False ]),
-            'n_freq_downsample': hp.choice('n_freq_downsample', [ 2 ]),
+            'n_freq_downsample': hp.choice('n_freq_downsample', [ args.pooling ]),
             'sample_freq': hp.choice('sample_freq', [1]),
             # Regularization and optimization parameters
             'learning_rate': hp.choice('learning_rate', [0.0001, 0.001, 0.005, 0.01, 0.05, 0.1]),
@@ -45,7 +45,7 @@ def get_experiment_space(args):
             'batch_size': hp.choice('batch_size', [8, 16, 32]),
             'n_windows': hp.choice('n_windows', [None]),
             'frequency': hp.choice('frequency', ['D']),
-            'random_seed': hp.quniform('random_seed', 1, 20, 1)}
+            'random_seed': hp.quniform('random_seed', 1, 10, 1)}
     return space
 
 def main(args):
@@ -60,7 +60,7 @@ def main(args):
     if args.dataset == 'ETTm2':
         len_val = 11520
         len_test = 11520
-        window_sampling_limit = 11520+len_val+len_test
+        window_sampling_limit = 4000+len_val+len_test
     if args.dataset == 'Exchange':
         len_val = 760
         len_test = 1517
@@ -68,7 +68,7 @@ def main(args):
     if args.dataset == 'ECL':
         len_val = 2632
         len_test = 5260
-        window_sampling_limit = 5260+len_val+len_test
+        window_sampling_limit = 4000+len_val+len_test
     if args.dataset == 'traffic':
         len_val = 1756
         len_test = 3508
@@ -76,7 +76,7 @@ def main(args):
     if args.dataset == 'weather':
         len_val = 5270
         len_test = 10539
-        window_sampling_limit = 10539+len_val+len_test
+        window_sampling_limit = 4000+len_val+len_test
     if args.dataset == 'ili':
         len_val = 97
         len_test = 193
@@ -87,7 +87,7 @@ def main(args):
     space = get_experiment_space(args)
 
     #---------------------------------------------- Directories ----------------------------------------------#
-    output_dir = f'./results/multivariate/{args.dataset}_{args.horizon}/RNN_2/{args.experiment_id}'
+    output_dir = f'./results/multivariate/{args.dataset}_{args.horizon}/RNN_{args.pooling}/{args.experiment_id}'
 
     os.makedirs(output_dir, exist_ok = True)
     assert os.path.exists(output_dir), f'Output dir {output_dir} does not exist'
@@ -108,6 +108,7 @@ def parse_args():
     desc = "Example of hyperparameter tuning"
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('--hyperopt_max_evals', type=int, help='hyperopt_max_evals')
+    parser.add_argument('--pooling', type=int, help='pooling')
     parser.add_argument('--experiment_id', default=None, required=False, type=str, help='string to identify experiment')
     return parser.parse_args()
 
@@ -141,4 +142,4 @@ if __name__ == '__main__':
 
 # source ~/anaconda3/etc/profile.d/conda.sh
 # conda activate nixtla
-# CUDA_VISIBLE_DEVICES=1 python rnn_multivariate.py --hyperopt_max_evals 5 --experiment_id "2022_05_15"
+# CUDA_VISIBLE_DEVICES=2 python rnn_multivariate.py --pooling 1 --hyperopt_max_evals 5 --experiment_id "2022_05_15"
