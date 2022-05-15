@@ -33,7 +33,7 @@ def get_experiment_space(args):
             'early_stop_patience': hp.choice('early_stop_patience', [10]),
             'eval_freq': hp.choice('eval_freq', [50]),
             'loss_train': hp.choice('loss', ['MAE']),
-            'loss_hypar': hp.choice('loss_hypar', [0.5]),                
+            'loss_hypar': hp.choice('loss_hypar', [0.5]),
             'loss_valid': hp.choice('loss_valid', ['MAE']),
             # Data parameters
             'normalizer_y': hp.choice('normalizer_y', [None]),
@@ -43,6 +43,7 @@ def get_experiment_space(args):
             'val_idx_to_sample_freq': hp.choice('val_idx_to_sample_freq', [1]),
             'batch_size': hp.choice('batch_size', [8, 16, 32]),
             'n_windows': hp.choice('n_windows', [None]),
+            'frequency': hp.choice('frequency', ['D']),
             'random_seed': hp.quniform('random_seed', 1, 20, 1)}
     return space
 
@@ -58,21 +59,29 @@ def main(args):
     if args.dataset == 'ETTm2':
         len_val = 11520
         len_test = 11520
+        window_sampling_limit = 11520+len_val+len_test
     if args.dataset == 'Exchange':
         len_val = 760
         len_test = 1517
+        window_sampling_limit = 1517+len_val+len_test
     if args.dataset == 'ECL':
         len_val = 2632
         len_test = 5260
+        window_sampling_limit = 5260+len_val+len_test
     if args.dataset == 'traffic':
         len_val = 1756
         len_test = 3508
+        window_sampling_limit = 3508+len_val+len_test
     if args.dataset == 'weather':
         len_val = 5270
         len_test = 10539
+        window_sampling_limit = 10539+len_val+len_test
     if args.dataset == 'ili':
         len_val = 97
         len_test = 193
+        window_sampling_limit = 193+len_val+len_test
+
+    Y_df = Y_df.groupby('unique_id').tail(window_sampling_limit).reset_index(drop=True)
 
     space = get_experiment_space(args)
 
@@ -110,7 +119,7 @@ if __name__ == '__main__':
 
     horizons = [96, 192, 336, 720]
     ILI_horizons = [24, 36, 48, 60]
-    datasets = ['ETTm2'] #, 'Exchange', 'weather', 'ili', 'ECL', 'traffic']
+    datasets = ['Exchange'] #, 'ETTm2', 'weather', 'ili', 'ECL', 'traffic']
 
     for dataset in datasets:
         # Horizon
@@ -131,4 +140,4 @@ if __name__ == '__main__':
 
 # source ~/anaconda3/etc/profile.d/conda.sh
 # conda activate nixtla
-# CUDA_VISIBLE_DEVICES=0 python nhits_multivariate.py --hyperopt_max_evals 10 --experiment_id "eval_train"
+# CUDA_VISIBLE_DEVICES=1 python rnn_multivariate.py --hyperopt_max_evals 10 --experiment_id "2022_05_15"
