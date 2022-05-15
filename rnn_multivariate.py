@@ -19,6 +19,7 @@ def get_experiment_space(args):
             'state_hsize': hp.choice('state_hsize', [10, 20, 50, 100]),
             'dilations': hp.choice('dilations', [ [[1, 2]], [[1, 2, 4, 8]], [[1,2],[4,8]] ]),
             'add_nl_layer': hp.choice('add_nl_layer', [ False ]),
+            'n_freq_downsample': hp.choice('n_freq_downsample', [ 2 ]),
             'sample_freq': hp.choice('sample_freq', [1]),
             # Regularization and optimization parameters
             'learning_rate': hp.choice('learning_rate', [0.0001, 0.001, 0.005, 0.01, 0.05, 0.1]),
@@ -86,7 +87,7 @@ def main(args):
     space = get_experiment_space(args)
 
     #---------------------------------------------- Directories ----------------------------------------------#
-    output_dir = f'./results/multivariate/{args.dataset}_{args.horizon}/RNN/{args.experiment_id}'
+    output_dir = f'./results/multivariate/{args.dataset}_{args.horizon}/RNN_2/{args.experiment_id}'
 
     os.makedirs(output_dir, exist_ok = True)
     assert os.path.exists(output_dir), f'Output dir {output_dir} does not exist'
@@ -140,4 +141,4 @@ if __name__ == '__main__':
 
 # source ~/anaconda3/etc/profile.d/conda.sh
 # conda activate nixtla
-# CUDA_VISIBLE_DEVICES=1 python rnn_multivariate.py --hyperopt_max_evals 10 --experiment_id "2022_05_15"
+# CUDA_VISIBLE_DEVICES=1 python rnn_multivariate.py --hyperopt_max_evals 5 --experiment_id "2022_05_15"
