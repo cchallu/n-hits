@@ -19,7 +19,8 @@ def get_experiment_space(args):
             'state_hsize': hp.choice('state_hsize', [10, 20, 50]),
             'dilations': hp.choice('dilations', [ [[1, 2]], [[1, 2, 4, 8]], [[1,2],[4,8]] ]),
             'add_nl_layer': hp.choice('add_nl_layer', [ False ]),
-            'n_freq_downsample': hp.choice('n_freq_downsample', [ args.pooling ]),
+            'n_pool_kernel_size': hp.choice('n_pool_kernel_size', [ args.pooling ]),
+            'n_freq_downsample': hp.choice('n_freq_downsample', [ args.interpolation ]),
             'sample_freq': hp.choice('sample_freq', [1]),
             # Regularization and optimization parameters
             'learning_rate': hp.choice('learning_rate', [0.0001, 0.001, 0.005, 0.01, 0.05, 0.1]),
@@ -87,7 +88,7 @@ def main(args):
     space = get_experiment_space(args)
 
     #---------------------------------------------- Directories ----------------------------------------------#
-    output_dir = f'./results/multivariate/{args.dataset}_{args.horizon}/RNN_{args.pooling}/{args.experiment_id}'
+    output_dir = f'./results/multivariate/{args.dataset}_{args.horizon}/RNN_{args.pooling}_{args.interpolation}/{args.experiment_id}'
 
     os.makedirs(output_dir, exist_ok = True)
     assert os.path.exists(output_dir), f'Output dir {output_dir} does not exist'
@@ -109,6 +110,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('--hyperopt_max_evals', type=int, help='hyperopt_max_evals')
     parser.add_argument('--pooling', type=int, help='pooling')
+    parser.add_argument('--interpolation', type=int, help='interpolation')
     parser.add_argument('--experiment_id', default=None, required=False, type=str, help='string to identify experiment')
     return parser.parse_args()
 
@@ -142,4 +144,4 @@ if __name__ == '__main__':
 
 # source ~/anaconda3/etc/profile.d/conda.sh
 # conda activate nixtla
-# CUDA_VISIBLE_DEVICES=2 python rnn_multivariate.py --pooling 1 --hyperopt_max_evals 5 --experiment_id "2022_05_15"
+# CUDA_VISIBLE_DEVICES=2 python rnn_multivariate.py --pooling 2 --interpolation 2 --hyperopt_max_evals 5 --experiment_id "2022_05_15"
