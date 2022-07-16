@@ -353,6 +353,7 @@ def instantiate_nhits(mc):
                       n_blocks=mc['n_blocks'],
                       n_layers=mc['n_layers'],
                       n_theta_hidden=mc['n_theta_hidden'],
+                      naive_seasonality=mc['naive_seasonality'],
                       n_pool_kernel_size=mc['n_pool_kernel_size'],
                       n_freq_downsample=mc['n_freq_downsample'],
                       pooling_mode=mc['pooling_mode'],

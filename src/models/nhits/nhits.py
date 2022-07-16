@@ -202,6 +202,7 @@ class _NHITS(nn.Module):
                  n_blocks: list,
                  n_layers: list,
                  n_theta_hidden: list,
+                 naive_seasonality: int,
                  n_pool_kernel_size: list,
                  n_freq_downsample: list,
                  pooling_mode,
@@ -214,6 +215,7 @@ class _NHITS(nn.Module):
         super().__init__()
 
         self.n_time_out = n_time_out
+        self.naive_seasonality = naive_seasonality
 
         blocks = self.create_stack(stack_types=stack_types,
                                    n_blocks=n_blocks,
@@ -327,7 +329,14 @@ class _NHITS(nn.Module):
         insample_x_t = insample_x_t.flip(dims=(-1,))
         insample_mask = insample_mask.flip(dims=(-1,))
 
-        forecast = insample_y[:, -1:] # Level with Naive1
+        if self.naive_seasonality > 0:
+            forecast = insample_y[:, -self.naive_seasonality:]
+            repeats = int(np.ceil(self.n_time_out/self.naive_seasonality))
+            forecast = forecast.repeat((1, repeats))
+            forecast = forecast[:, :self.n_time_out]
+        else:
+            forecast = insample_y[:, -1:] # Level with Naive1
+
         for i, block in enumerate(self.blocks):
             backcast, block_forecast = block(insample_y=residuals, insample_x_t=insample_x_t,
                                              outsample_x_t=outsample_x_t, x_s=x_s)
@@ -345,10 +354,16 @@ class _NHITS(nn.Module):
 
         n_batch, n_channels, n_t = outsample_x_t.size(0), outsample_x_t.size(1), outsample_x_t.size(2)
 
-        level = insample_y[:, -1:] # Level with Naive1
-        block_forecasts = [ level.repeat(1, n_t) ]
+        if self.naive_seasonality > 0:
+            forecast = insample_y[:, -self.naive_seasonality:]
+            repeats = int(np.ceil(self.n_time_out/self.naive_seasonality))
+            forecast = forecast.repeat((1, repeats))
+            forecast = forecast[:, :self.n_time_out]
+            block_forecasts = [ forecast ]
+        else:
+            forecast = insample_y[:, -1:] # Level with Naive1
+            block_forecasts = [ forecast.repeat(1, n_t) ]
 
-        forecast = level
         for i, block in enumerate(self.blocks):
             backcast, block_forecast = block(insample_y=residuals, insample_x_t=insample_x_t,
                                              outsample_x_t=outsample_x_t, x_s=x_s)
@@ -378,6 +393,7 @@ class NHITS(pl.LightningModule):
                  n_blocks,
                  n_layers,
                  n_theta_hidden,
+                 naive_seasonality,
                  n_pool_kernel_size,
                  n_freq_downsample,
                  pooling_mode,
@@ -480,6 +496,7 @@ class NHITS(pl.LightningModule):
         self.n_blocks = n_blocks
         self.n_layers = n_layers
         self.n_theta_hidden = n_theta_hidden
+        self.naive_seasonality = naive_seasonality
         self.n_pool_kernel_size = n_pool_kernel_size
         self.n_freq_downsample = n_freq_downsample
         self.pooling_mode = pooling_mode
@@ -518,6 +535,7 @@ class NHITS(pl.LightningModule):
                              n_blocks=self.n_blocks,
                              n_layers=self.n_layers,
                              n_theta_hidden=self.n_theta_hidden,
+                             naive_seasonality=self.naive_seasonality,
                              n_pool_kernel_size=self.n_pool_kernel_size,
                              n_freq_downsample=self.n_freq_downsample,
                              pooling_mode=self.pooling_mode,

@@ -24,6 +24,7 @@ def get_experiment_space(args):
             'n_blocks': hp.choice('n_blocks', [ 3*[1]]),
             'n_layers': hp.choice('n_layers', [ 9*[2] ]),
             'n_hidden': hp.choice('n_hidden', [ 512 ]),
+            'naive_seasonality': hp.choice('naive_seasonality', [ 0, args.naive_seasonality ]),
             'n_pool_kernel_size': hp.choice('n_pool_kernel_size', [ 3*[1], 3*[2], 3*[4], 3*[8], [8, 4, 1], [16, 8, 1] ]),
             'n_freq_downsample': hp.choice('n_freq_downsample', [ [168, 24, 1], [24, 12, 1],
                                                                   [180, 60, 1], [60, 8, 1],
@@ -72,21 +73,27 @@ def main(args):
     if args.dataset == 'ETTm2':
         len_val = 11520
         len_test = 11520
+        args.naive_seasonality = 96
     if args.dataset == 'Exchange':
         len_val = 760
         len_test = 1517
+        args.naive_seasonality = 7
     if args.dataset == 'ECL':
         len_val = 2632
         len_test = 5260
+        args.naive_seasonality = 96
     if args.dataset == 'traffic':
         len_val = 1756
         len_test = 3508
+        args.naive_seasonality = 168
     if args.dataset == 'weather':
         len_val = 5270
         len_test = 10539
+        args.naive_seasonality = 144
     if args.dataset == 'ili':
         len_val = 97
         len_test = 193
+        args.naive_seasonality = 52
 
     space = get_experiment_space(args)
 
@@ -153,4 +160,4 @@ if __name__ == '__main__':
 
 # source ~/anaconda3/etc/profile.d/conda.sh
 # conda activate nixtla
-# CUDA_VISIBLE_DEVICES=0 python nhits_multivariate.py --hyperopt_max_evals 10 --experiment_id "eval_train"
+# CUDA_VISIBLE_DEVICES=0 python nhits_multivariate.py --hyperopt_max_evals 30 --experiment_id "2022_07_16"
