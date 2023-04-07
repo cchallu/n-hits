@@ -18,9 +18,9 @@ RUN add-apt-repository ppa:ubuntu-toolchain-r/test && \
     apt-get install -y gcc-9 && \
     apt-get upgrade -y libstdc++6
 
-RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh && \
-    bash Miniconda3-latest-Linux-x86_64.sh -p /miniconda -b  && \
-    rm -rf Miniconda3-latest-Linux-x86_64.sh
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-py37_4.12.0-Linux-x86_64.sh && \
+    bash Miniconda3-py37_4.12.0-Linux-x86_64.sh -p /miniconda -b  && \
+    rm -rf Miniconda3-py37_4.12.0-Linux-x86_64.sh
 
 ENV PATH=/miniconda/bin:${PATH}
 RUN conda update -y conda
